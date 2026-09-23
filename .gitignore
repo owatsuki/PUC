@@ -1,0 +1,16 @@
+
+# Vim
+*.swp
+*.swo
+*~
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# Java / Maven
+target/
+
+# Sistema
+.DS_Store
+Thumbs.db
