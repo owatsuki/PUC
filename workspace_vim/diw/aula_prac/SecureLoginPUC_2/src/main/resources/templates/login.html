@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambiente Virtual_</title>
+    <link rel="stylesheet" th:href="@{/css/login.css}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    
+    <!-- CAMADAS ATMOSFÉRICAS -->
+    <div class="ambient-glow"></div>
+    <div class="crt-overlay"></div>
+
+    <!-- BACKGROUND: HUD INSTITUCIONAL -->
+    <div class="hud-institutional layer-parallax" data-speed="1">
+        <div class="hud-line"></div>
+        <div class="hud-text">
+            <span class="hud-brand">PUC MINAS</span><br>
+            <span class="hud-meta">sys.auth // 2026</span>
+        </div>
+    </div>
+
+    <!-- BACKGROUND: PSEUDOCÓDIGO -->
+    <div class="hud-pseudocode layer-parallax" data-speed="2">
+        <pre><code><span class="code-comment">// night_mode</span>
+while (quiet) {
+  <span class="code-highlight">dream();</span>
+}</code></pre>
+    </div>
+
+    <div class="hud-pseudocode hud-bottom-left layer-parallax" data-speed="1.5">
+        <pre><code>await authenticate();</code></pre>
+    </div>
+
+    <!-- JANELA PRINCIPAL -->
+    <div class="login-window">
+        <!-- BARRA DO SISTEMA -->
+        <div class="window-topbar">
+            <span class="window-title">auth_module.exe</span>
+            <div class="window-controls">
+                <span class="control-dot"></span>
+                <span class="control-dot"></span>
+            </div>
+        </div>
+
+        <!-- CONTÊINER ORIGINAL MODIFICADO -->
+        <div class="login-container">
+            <div class="login-image-logo-container">
+                <img th:src="@{/images/puc_anime.png}" alt="Ambiente Noturno">
+            </div>
+            
+            <div class="login-form-page">
+                <form th:action="@{/login}" method="post" class="login-form">
+                    
+                    <h4 class="login-title">
+                        <span class="prompt-symbol">❯</span> LOGIN<span class="cursor-blink">_</span>
+                    </h4>
+                    
+                    <div class="input-group">
+                        <input type="text" id="username" name="username" placeholder="username" required autocomplete="off">
+                    </div>
+                    
+                    <div class="input-group">
+                        <input type="password" id="password" name="password" placeholder="password" required>
+                    </div>
+                    
+                    <div class="login-button-container">
+                        <button type="submit">[ ENTRAR ]</button>
+                    </div>
+                    
+                    <p class="login-redirect-options">
+                        <span class="muted-text">system.query...("visitante?"): </span> <br>
+                        <a href="/register">Cadastre-se</a> <span class="separator">|</span>
+                        <a href="/recoverpassword">Esqueceu sua senha?</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT DE MICROINTERAÇÃO DE PARALLAX -->
+    <script th:src="@{/js/login-atmosphere.js}"></script>
+</body>
+</html>
