@@ -1,31 +1,179 @@
 import java.io.File;
 import java.util.Scanner;
 
-public class Qst01
+public class Qst09
 {
     public static void main(String[] args)
     {
-        Veiculo[] vet = LeitorCsv.ler("/tmp/veiculos.csv");
-        if (vet == null)
+        Veiculo[] todos = LeitorCsv.ler("/tmp/veiculos.csv");
+        if (todos == null || todos.length == 0)
         {
             return;
         }
+
+        Lista lista = new Lista(1000);
+
         Scanner sc = new Scanner(System.in);
         while (sc.hasNextInt())
         {
             int id = sc.nextInt();
             if (id == -1) break;
-            boolean achou = false;
-            for (int i = 0; i < vet.length && !achou; i++)
+            for (int i = 0; i < todos.length; i++)
             {
-                if (vet[i] != null && vet[i].getId() == id)
+                if (todos[i] != null && todos[i].getId() == id)
                 {
-                    System.out.println(vet[i].format());
-                    achou = true;
+                    lista.inserirFim(todos[i]);
+                    break;
                 }
             }
         }
+
+        int n = sc.nextInt();
+        sc.nextLine();
+
+        for (int k = 0; k < n; k++)
+        {
+            String linha = sc.nextLine();
+            String[] p = linha.split(" ");
+            String cmd = p[0];
+
+            if (cmd.equals("II"))
+            {
+                int id = Integer.parseInt(p[1]);
+                Veiculo v = buscar(todos, id);
+                if (v != null) lista.inserirInicio(v);
+            }
+            else if (cmd.equals("IF"))
+            {
+                int id = Integer.parseInt(p[1]);
+                Veiculo v = buscar(todos, id);
+                if (v != null) lista.inserirFim(v);
+            }
+            else if (cmd.equals("I*"))
+            {
+                int pos = Integer.parseInt(p[1]);
+                int id = Integer.parseInt(p[2]);
+                Veiculo v = buscar(todos, id);
+                if (v != null) lista.inserir(v, pos);
+            }
+            else if (cmd.equals("RI"))
+            {
+                Veiculo v = lista.removerInicio();
+                if (v != null)
+                {
+                    System.out.println("(R)" + v.getMarca() + " " + v.getModelo());
+                }
+            }
+            else if (cmd.equals("RF"))
+            {
+                Veiculo v = lista.removerFim();
+                if (v != null)
+                {
+                    System.out.println("(R)" + v.getMarca() + " " + v.getModelo());
+                }
+            }
+            else if (cmd.equals("R*"))
+            {
+                int pos = Integer.parseInt(p[1]);
+                Veiculo v = lista.remover(pos);
+                if (v != null)
+                {
+                    System.out.println("(R)" + v.getMarca() + " " + v.getModelo());
+                }
+            }
+        }
+
+        lista.mostrar();
         sc.close();
+    }
+
+    public static Veiculo buscar(Veiculo[] vet, int id)
+    {
+        for (int i = 0; i < vet.length; i++)
+        {
+            if (vet[i] != null && vet[i].getId() == id)
+            {
+                return vet[i];
+            }
+        }
+        return null;
+    }
+}
+
+class Lista
+{
+    private Veiculo[] array;
+    private int n;
+
+    Lista(int tamanho)
+    {
+        array = new Veiculo[tamanho];
+        n = 0;
+    }
+
+    public void inserirInicio(Veiculo v)
+    {
+        for (int i = n; i > 0; i--)
+        {
+            array[i] = array[i - 1];
+        }
+        array[0] = v;
+        n++;
+    }
+
+    public void inserir(Veiculo v, int pos)
+    {
+        for (int i = n; i > pos; i--)
+        {
+            array[i] = array[i - 1];
+        }
+        array[pos] = v;
+        n++;
+    }
+
+    public void inserirFim(Veiculo v)
+    {
+        array[n] = v;
+        n++;
+    }
+
+    public Veiculo removerInicio()
+    {
+        if (n == 0) return null;
+        Veiculo resp = array[0];
+        for (int i = 0; i < n - 1; i++)
+        {
+            array[i] = array[i + 1];
+        }
+        n--;
+        return resp;
+    }
+
+    public Veiculo remover(int pos)
+    {
+        if (n == 0) return null;
+        Veiculo resp = array[pos];
+        for (int i = pos; i < n - 1; i++)
+        {
+            array[i] = array[i + 1];
+        }
+        n--;
+        return resp;
+    }
+
+    public Veiculo removerFim()
+    {
+        if (n == 0) return null;
+        n--;
+        return array[n];
+    }
+
+    public void mostrar()
+    {
+        for (int i = 0; i < n; i++)
+        {
+            System.out.println(array[i].format());
+        }
     }
 }
 
@@ -165,10 +313,15 @@ class LeitorCsv
 {
     public static Veiculo[] ler(String caminhoArquivo)
     {
-        Veiculo[] vet = null;
+        Veiculo[] vet = new Veiculo[0];
         try
         {
-            Scanner sc = new Scanner(new File(caminhoArquivo));
+            File arq = new File(caminhoArquivo);
+            if (!arq.exists())
+            {
+                return vet;
+            }
+            Scanner sc = new Scanner(arq);
             if (sc.hasNextLine()) sc.nextLine();
             int n = 0;
             while (sc.hasNextLine())
@@ -179,20 +332,23 @@ class LeitorCsv
             sc.close();
 
             vet = new Veiculo[n];
-            sc = new Scanner(new File(caminhoArquivo));
+            sc = new Scanner(arq);
             if (sc.hasNextLine()) sc.nextLine();
             int i = 0;
             while (sc.hasNextLine())
             {
                 String linha = sc.nextLine();
-                vet[i] = Veiculo.parseVeiculo(linha);
-                i++;
+                if (linha != null && !linha.trim().isEmpty())
+                {
+                    vet[i] = Veiculo.parseVeiculo(linha);
+                    i++;
+                }
             }
             sc.close();
         }
         catch (Exception e)
         {
-            System.out.println("Erro: " + e.getMessage());
+            System.err.println("Erro: " + e.getMessage());
         }
         return vet;
     }

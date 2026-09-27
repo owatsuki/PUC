@@ -1,31 +1,121 @@
 import java.io.File;
+import java.util.Locale;
 import java.util.Scanner;
 
-public class Qst01
+public class Qst12
 {
     public static void main(String[] args)
     {
-        Veiculo[] vet = LeitorCsv.ler("/tmp/veiculos.csv");
-        if (vet == null)
+        Veiculo[] todos = LeitorCsv.ler("/tmp/veiculos.csv");
+        if (todos == null || todos.length == 0)
         {
             return;
         }
+
+        Pilha pilha = new Pilha();
+
         Scanner sc = new Scanner(System.in);
         while (sc.hasNextInt())
         {
             int id = sc.nextInt();
             if (id == -1) break;
-            boolean achou = false;
-            for (int i = 0; i < vet.length && !achou; i++)
+            for (int i = 0; i < todos.length; i++)
             {
-                if (vet[i] != null && vet[i].getId() == id)
+                if (todos[i] != null && todos[i].getId() == id)
                 {
-                    System.out.println(vet[i].format());
-                    achou = true;
+                    pilha.empilhar(todos[i]);
+                    break;
                 }
             }
         }
+
+        int n = sc.nextInt();
+        sc.nextLine();
+
+        for (int k = 0; k < n; k++)
+        {
+            String linha = sc.nextLine();
+            String[] p = linha.split(" ");
+            String cmd = p[0];
+
+            if (cmd.equals("I"))
+            {
+                int id = Integer.parseInt(p[1]);
+                Veiculo v = buscar(todos, id);
+                if (v != null) pilha.empilhar(v);
+            }
+            else if (cmd.equals("R"))
+            {
+                Veiculo v = pilha.desempilhar();
+                if (v != null)
+                {
+                    System.out.println("(R)" + v.getMarca() + " " + v.getModelo());
+                }
+            }
+        }
+
+        pilha.mostrar();
         sc.close();
+    }
+
+    public static Veiculo buscar(Veiculo[] vet, int id)
+    {
+        for (int i = 0; i < vet.length; i++)
+        {
+            if (vet[i] != null && vet[i].getId() == id)
+            {
+                return vet[i];
+            }
+        }
+        return null;
+    }
+}
+
+class Celula
+{
+    public Veiculo elemento;
+    public Celula prox;
+
+    public Celula(Veiculo elemento)
+    {
+        this.elemento = elemento;
+        this.prox = null;
+    }
+}
+
+class Pilha
+{
+    private Celula topo;
+
+    Pilha()
+    {
+        topo = null;
+    }
+
+    public void empilhar(Veiculo v)
+    {
+        Celula c = new Celula(v);
+        c.prox = topo;
+        topo = c;
+    }
+
+    public Veiculo desempilhar()
+    {
+        if (topo == null) return null;
+        Veiculo resp = topo.elemento;
+        Celula tmp = topo;
+        topo = topo.prox;
+        tmp.prox = null;
+        tmp = null;
+        return resp;
+    }
+
+    public void mostrar()
+    {
+        for (Celula c = topo; c != null; c = c.prox)
+        {
+            System.out.println(c.elemento.format());
+        }
     }
 }
 
@@ -62,7 +152,7 @@ class Data
 
     public String format()
     {
-        return String.format("%02d/%02d/%04d", this.dia, this.mes, this.ano);
+        return String.format(Locale.US, "%02d/%02d/%04d", this.dia, this.mes, this.ano);
     }
 }
 
@@ -153,7 +243,7 @@ class Veiculo
             if (i > 0) comb += ",";
             comb += this.combustivel[i];
         }
-        return String.format("[%d ## %s ## %s ## %d ## %s ## [%s] ## %d ## %.1f ## %s ## %s ## %.2f ## %.2f ## %.1f ## %b ## %s]",
+        return String.format(Locale.US, "[%d ## %s ## %s ## %d ## %s ## [%s] ## %d ## %.1f ## %s ## %s ## %.2f ## %.2f ## %.1f ## %b ## %s]",
             this.id, this.marca, this.modelo, this.ano, this.categoria, comb,
             this.cilindros, this.cilindrada, this.transmissao, this.tracao,
             this.consumoCidade, this.consumoEstrada, this.co2, this.turbo,
@@ -165,10 +255,15 @@ class LeitorCsv
 {
     public static Veiculo[] ler(String caminhoArquivo)
     {
-        Veiculo[] vet = null;
+        Veiculo[] vet = new Veiculo[0];
         try
         {
-            Scanner sc = new Scanner(new File(caminhoArquivo));
+            File arq = new File(caminhoArquivo);
+            if (!arq.exists())
+            {
+                return vet;
+            }
+            Scanner sc = new Scanner(arq);
             if (sc.hasNextLine()) sc.nextLine();
             int n = 0;
             while (sc.hasNextLine())
@@ -179,20 +274,23 @@ class LeitorCsv
             sc.close();
 
             vet = new Veiculo[n];
-            sc = new Scanner(new File(caminhoArquivo));
+            sc = new Scanner(arq);
             if (sc.hasNextLine()) sc.nextLine();
             int i = 0;
             while (sc.hasNextLine())
             {
                 String linha = sc.nextLine();
-                vet[i] = Veiculo.parseVeiculo(linha);
-                i++;
+                if (linha != null && !linha.trim().isEmpty())
+                {
+                    vet[i] = Veiculo.parseVeiculo(linha);
+                    i++;
+                }
             }
             sc.close();
         }
         catch (Exception e)
         {
-            System.out.println("Erro: " + e.getMessage());
+            System.err.println("Erro: " + e.getMessage());
         }
         return vet;
     }

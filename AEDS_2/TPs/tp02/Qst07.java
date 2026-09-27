@@ -1,31 +1,82 @@
 import java.io.File;
+import java.util.Locale;
 import java.util.Scanner;
 
-public class Qst01
+public class Qst07
 {
     public static void main(String[] args)
     {
-        Veiculo[] vet = LeitorCsv.ler("/tmp/veiculos.csv");
-        if (vet == null)
+        Veiculo[] todos = LeitorCsv.ler("/tmp/veiculos.csv");
+        if (todos == null || todos.length == 0)
         {
             return;
         }
+
+        Veiculo[] sel = new Veiculo[10000];
+        int m = 0;
+
         Scanner sc = new Scanner(System.in);
         while (sc.hasNextInt())
         {
             int id = sc.nextInt();
             if (id == -1) break;
-            boolean achou = false;
-            for (int i = 0; i < vet.length && !achou; i++)
+            for (int i = 0; i < todos.length; i++)
             {
-                if (vet[i] != null && vet[i].getId() == id)
+                if (todos[i] != null && todos[i].getId() == id)
                 {
-                    System.out.println(vet[i].format());
-                    achou = true;
+                    sel[m] = todos[i];
+                    m++;
+                    break;
                 }
             }
         }
         sc.close();
+
+        int[] cont = new int[10];
+        for (int i = 0; i < m; i++)
+        {
+            int b = (int)(sel[i].getCilindrada() / 8.1 * 10);
+            if (b > 9) b = 9;
+            cont[b]++;
+        }
+
+        Veiculo[][] baldes = new Veiculo[10][];
+        for (int i = 0; i < 10; i++)
+        {
+            baldes[i] = new Veiculo[cont[i]];
+        }
+
+        int[] pos = new int[10];
+        for (int i = 0; i < m; i++)
+        {
+            int b = (int)(sel[i].getCilindrada() / 8.1 * 10);
+            if (b > 9) b = 9;
+            baldes[b][pos[b]] = sel[i];
+            pos[b]++;
+        }
+
+        for (int b = 0; b < 10; b++)
+        {
+            for (int i = 1; i < baldes[b].length; i++)
+            {
+                Veiculo chave = baldes[b][i];
+                int j = i - 1;
+                while (j >= 0 && baldes[b][j].getCilindrada() > chave.getCilindrada())
+                {
+                    baldes[b][j + 1] = baldes[b][j];
+                    j--;
+                }
+                baldes[b][j + 1] = chave;
+            }
+        }
+
+        for (int b = 0; b < 10; b++)
+        {
+            for (int i = 0; i < baldes[b].length; i++)
+            {
+                System.out.println(baldes[b][i].format());
+            }
+        }
     }
 }
 
@@ -62,7 +113,7 @@ class Data
 
     public String format()
     {
-        return String.format("%02d/%02d/%04d", this.dia, this.mes, this.ano);
+        return String.format(Locale.US, "%02d/%02d/%04d", this.dia, this.mes, this.ano);
     }
 }
 
@@ -153,7 +204,7 @@ class Veiculo
             if (i > 0) comb += ",";
             comb += this.combustivel[i];
         }
-        return String.format("[%d ## %s ## %s ## %d ## %s ## [%s] ## %d ## %.1f ## %s ## %s ## %.2f ## %.2f ## %.1f ## %b ## %s]",
+        return String.format(Locale.US, "[%d ## %s ## %s ## %d ## %s ## [%s] ## %d ## %.1f ## %s ## %s ## %.2f ## %.2f ## %.1f ## %b ## %s]",
             this.id, this.marca, this.modelo, this.ano, this.categoria, comb,
             this.cilindros, this.cilindrada, this.transmissao, this.tracao,
             this.consumoCidade, this.consumoEstrada, this.co2, this.turbo,
@@ -165,10 +216,15 @@ class LeitorCsv
 {
     public static Veiculo[] ler(String caminhoArquivo)
     {
-        Veiculo[] vet = null;
+        Veiculo[] vet = new Veiculo[0];
         try
         {
-            Scanner sc = new Scanner(new File(caminhoArquivo));
+            File arq = new File(caminhoArquivo);
+            if (!arq.exists())
+            {
+                return vet;
+            }
+            Scanner sc = new Scanner(arq);
             if (sc.hasNextLine()) sc.nextLine();
             int n = 0;
             while (sc.hasNextLine())
@@ -179,20 +235,23 @@ class LeitorCsv
             sc.close();
 
             vet = new Veiculo[n];
-            sc = new Scanner(new File(caminhoArquivo));
+            sc = new Scanner(arq);
             if (sc.hasNextLine()) sc.nextLine();
             int i = 0;
             while (sc.hasNextLine())
             {
                 String linha = sc.nextLine();
-                vet[i] = Veiculo.parseVeiculo(linha);
-                i++;
+                if (linha != null && !linha.trim().isEmpty())
+                {
+                    vet[i] = Veiculo.parseVeiculo(linha);
+                    i++;
+                }
             }
             sc.close();
         }
         catch (Exception e)
         {
-            System.out.println("Erro: " + e.getMessage());
+            System.err.println("Erro: " + e.getMessage());
         }
         return vet;
     }
